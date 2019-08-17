@@ -34,9 +34,9 @@ public:
         virtual const char   *getConfiguration(void);                   /// Return  current configuration as a human readable string
         virtual bool         getNextFrame(uint32_t *fn,ADMImage *image);    /// Return the next image
    //  virtual FilterInfo  *getInfo(void);                             /// Return picture parameters after this filter
-        virtual bool         getCoupledConf(CONFcouple **couples) ;   /// Return the current filter configuration
+        virtual bool         getCoupledConf(CONFcouple **couples);   /// Return the current filter configuration
         virtual void         setCoupledConf(CONFcouple *couples);
-        virtual bool         configure(void) ;           /// Start graphical user interface
+        virtual bool         configure(void);           /// Start graphical user interface
 
 };
 
@@ -56,7 +56,7 @@ DECLARE_VIDEO_FILTER(AVDM_BlendFrames,
  * @param 
  * @return 
  */
-bool  AVDM_BlendFrames::configure()
+bool AVDM_BlendFrames::configure()
 {
     
   uint32_t N;
@@ -74,7 +74,7 @@ bool  AVDM_BlendFrames::configure()
  *      \fn getConfiguration
  * 
  */
-const char   *AVDM_BlendFrames::getConfiguration(void)
+const char *AVDM_BlendFrames::getConfiguration(void)
 {
     static char conf[24];
     snprintf(conf,24," BlendFrames:%d ",param.N);
@@ -86,7 +86,7 @@ const char   *AVDM_BlendFrames::getConfiguration(void)
  * @param in
  * @param couples
  */
-AVDM_BlendFrames::AVDM_BlendFrames(ADM_coreVideoFilter *in,CONFcouple *setup) :  ADM_coreVideoFilterCached(3,in,setup)//Q What does the 3 mean here?
+AVDM_BlendFrames::AVDM_BlendFrames(ADM_coreVideoFilter *in,CONFcouple *setup) : ADM_coreVideoFilterCached(3,in,setup)//Q What does the 3 mean here?
 {
     if(!setup || !ADM_paramLoad(setup,blend_param,&param))
     {
@@ -137,7 +137,6 @@ AVDM_BlendFrames::~AVDM_BlendFrames(void)
  */
 void AVDM_BlendFrames::AccumulateFrame(ADMImage *buffer,ADMImage *frame)
 {
-  
     uint8_t *bplanes[3]*;//Q uint32_t type image for accumulation?
     uint8_t *fplanes[3]*;
     int      bpitches[3],fpitches[3];
@@ -165,7 +164,7 @@ void AVDM_BlendFrames::AccumulateFrame(ADMImage *buffer,ADMImage *frame)
     }
 }
 
-bool AVDM_BlendFrames::WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N)
+void AVDM_BlendFrames::WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N)
 {
   
     uint8_t *bplanes[3]*;//Q uint32_t type image for accumulation?
@@ -194,7 +193,6 @@ bool AVDM_BlendFrames::WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame
             f+=fpitches[i];
         }        
     }
-    return true;
 }
 
 /**
