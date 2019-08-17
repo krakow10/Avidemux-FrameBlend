@@ -223,12 +223,19 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 }
 */
 
+/**
+ * \fn getNextFrame
+ * @param fn
+ * @param image
+ * @return 
+ */
 bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 {
 	//I have a feeling that this is not the usual way to grab the input frame
 	ADMImage *frame=vidCache->getImage(fn);
-	//Create buffer
+	
 	if(buffer==NULL){
+		//Create new 32 bit accumulation buffer
 		buffer = new uint32_t**[3];
 		for(int i=0;i<3;i++)
 		{
@@ -245,6 +252,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 			}
 		}
 	}
+
 	//Accumulate frame into buffer
 	uint8_t *fplanes[3]*;
 	int fpitches[3];
@@ -265,6 +273,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 		}        
 	}
 	accumulated++;
+
 	//Output a frame
 	if(accumulated==param.N){
 		accumulated=0;
