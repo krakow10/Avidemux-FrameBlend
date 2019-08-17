@@ -20,7 +20,7 @@
         \class AVDM_BlendFrames
  *      \brief fade video plugin
  */
-class AVDM_BlendFrames : public  ADM_coreVideoFilterCached
+class AVDM_BlendFrames : public  ADM_coreVideoFilter
 {
 protected:
                 blend         param;
@@ -43,13 +43,13 @@ public:
 // Add the hook to make it valid plugin
 
 DECLARE_VIDEO_FILTER(AVDM_BlendFrames,
-                1,0,0,              // Version
-                     ADM_UI_ALL,         // UI
-                     VF_TRANSFORM,            // Category
-                     "blend",            // internal name (must be uniq!)
-                     QT_TRANSLATE_NOOP("blend","BlendFrames"),            // Display name
-                     QT_TRANSLATE_NOOP("blend","Blend groups of N frames into a single frame.  Useful for speeding up slow motion footage or creating timelapses.") // Description
-                 );   
+	1,0,0,              // Version
+	ADM_UI_ALL,         // UI
+	VF_TRANSFORM,       // Category
+	"blend",            // internal name (must be uniq!)
+	QT_TRANSLATE_NOOP("blend","BlendFrames"),// Display name
+	QT_TRANSLATE_NOOP("blend","Blend groups of N frames into a single frame.  Useful for speeding up slow motion footage or creating timelapses.") // Description
+);   
 /**
  * \fn configure
  * \brief UI configuration
@@ -86,7 +86,7 @@ const char *AVDM_BlendFrames::getConfiguration(void)
  * @param in
  * @param couples
  */
-AVDM_BlendFrames::AVDM_BlendFrames(ADM_coreVideoFilter *in,CONFcouple *setup) : ADM_coreVideoFilterCached(1,in,setup)//Q What does the 3 mean here?
+AVDM_BlendFrames::AVDM_BlendFrames(ADM_coreVideoFilter *in,CONFcouple *setup) : ADM_coreVideoFilter(previous,setup)
 {
     if(!setup || !ADM_paramLoad(setup,blend_param,&param))
     {
@@ -232,15 +232,17 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 {
 	//I have a feeling that this is not the usual way to grab the input frame
-	ADMImage *frame=vidCache->getImage(fn);
+	//ADMImage *frame=vidCache->getImage(fn);
+	if(previousFilter->getNextFrame(fn,image)==false)
+		return false;
 	
 	if(buffer==NULL){
 		//Create new 32 bit accumulation buffer
 		buffer = new uint32_t**[3];
 		for(int i=0;i<3;i++)
 		{
-			int w=(int)frame->GetWidth((ADM_PLANE)i);
-			int h=(int)frame->GetHeight((ADM_PLANE)i);
+			int w=(int)image->GetWidth((ADM_PLANE)i);
+			int h=(int)image->GetHeight((ADM_PLANE)i);
 			buffer[i] = new uint32_t*[h];
 			for(int y=0;y<h;y++)
 			{
@@ -256,12 +258,12 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 	//Accumulate frame into buffer
 	uint8_t *fplanes[3]*;
 	int fpitches[3];
-	frame->GetReadPlanes(fplanes);
-	frame->GetPitches(fpitches);
+	image->GetReadPlanes(fplanes);
+	image->GetPitches(fpitches);
 	for(int i=0;i<3;i++)
 	{
-		int w=(int)frame->GetWidth((ADM_PLANE)i);
-		int h=(int)frame->GetHeight((ADM_PLANE)i);
+		int w=(int)image->GetWidth((ADM_PLANE)i);
+		int h=(int)image->GetHeight((ADM_PLANE)i);
 		uint8_t *f=fplanes[i];
 		for(int y=0;y<h;y++)
 		{
@@ -274,26 +276,26 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 	}
 	accumulated++;
 
-	//Output a frame
+	//Output a frame when N frames have been accumulated
 	if(accumulated==param.N){
 		accumulated=0;
 		//Divide buffer by N and write to 'image'
-		image=new ADMImageDefault(frame->GetWidth(PLANAR_Y),frame->GetHeight(PLANAR_Y));
-		image->copyInfo(frame);//Who knows what crazy info the frame has
-		if(frame->Pts!=ADM_NO_PTS)
-			image->Pts=frame->Pts/param.N;
+		//image=new ADMImageDefault(frame->GetWidth(PLANAR_Y),frame->GetHeight(PLANAR_Y));
+		//image->copyInfo(frame);//Who knows what crazy info the frame has
+		if(image->Pts!=ADM_NO_PTS)
+			image->Pts=image->Pts/param.N;
 		uint8_t *iplanes[3]*;
 		image->GetWritePlanes(iplanes);
 		for(int i=0;i<3;i++)
 		{
-			int w=(int)frame->GetWidth((ADM_PLANE)i);
-			int h=(int)frame->GetHeight((ADM_PLANE)i);
+			int w=(int)image->GetWidth((ADM_PLANE)i);
+			int h=(int)image->GetHeight((ADM_PLANE)i);
 			uint8_t *ip=iplanes[i];
 			for(int y=0;y<h;y++)
 			{
 				for(int x=0;x<w;x++)
 				{
-					ip[x]=(uint8_t)buffer[i][y][x]/param.N;//Not sure if this will divide before casting
+					ip[x]=(uint8_t)buffer[i][y][x]/param.N;//Not sure if this will round weirdly
 					buffer[i][y][x]=0;//Reset buffer to 0
 				}
 				ip+=fpitches[i];
