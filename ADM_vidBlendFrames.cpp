@@ -167,13 +167,14 @@ void AVDM_BlendFrames::AccumulateFrame(ADMImage *buffer,ADMImage *frame)
 void AVDM_BlendFrames::WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N)
 {
   
-    uint8_t *bplanes[3]*;//Q uint32_t type image for accumulation?
+    uint8_t *brplanes[3]*,*bwplanes[3]*;//Q uint32_t type image for accumulation?
     uint8_t *fplanes[3]*;
     int      bpitches[3],fpitches[3];
 
-    buffer->GetWritePlanes(bplanes);
+    buffer->GetReadPlanes(brplanes);
+    buffer->GetWritePlanes(bwplanes);
     buffer->GetPitches(bpitches);//Q Nice
-    frame->GetReadPlanes(fplanes);
+    frame->GetWritePlanes(fplanes);
     frame->GetPitches(fpitches);
 
     for(int i=0;i<3;i++)
@@ -181,15 +182,17 @@ void AVDM_BlendFrames::WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame
         int    w=(int)frame->GetWidth((ADM_PLANE)i);
         int    h=(int)frame->GetHeight((ADM_PLANE)i);
         uint8_t *f=fplanes[i];
-        uint8_t *b=bplanes[i];//Q uint32_t
+        uint8_t *br=brplanes[i];//Q uint32_t
+        uint8_t *bw=bwplanes[i];
         for(int y=0;y<h;y++)
         {
             for(int x=0;x<w;x++)
             {
-                f[x]=(uint8_t)b[x]/N;//The meat of the matter...
-                b[x]=0;//Clear buffer here as well because why not
+                f[x]=(uint8_t)br[x]/N;//The meat of the matter...
+                bw[x]=0;//Clear buffer here as well because why not
             }
-            b+=bpitches[i];
+            br+=brpitches[i];
+            bw+=bwpitches[i];
             f+=fpitches[i];
         }        
     }
