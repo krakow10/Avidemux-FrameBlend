@@ -58,7 +58,8 @@ DECLARE_VIDEO_FILTER(AVDM_BlendFrames,
  */
 bool AVDM_BlendFrames::configure()
 {
-  diaElemUInteger N(&(param.N),QT_TRANSLATE_NOOP("blend","Frames"));
+#define MAX_BLEND_FRAMES 16777216//2^32/2^8 This is the in-all-cases limit, but on average it should be able to support probably 25% more
+  diaElemUInteger N(&(param.N),QT_TRANSLATE_NOOP("blend","Frames"),1,MAX_BLEND_FRAMES);
   diaElem *elems[1]={&N};
   if(diaFactoryRun(QT_TRANSLATE_NOOP("blend","Blend"),1,elems)){
     if(param.N<1)
