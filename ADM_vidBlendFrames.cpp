@@ -24,7 +24,7 @@ class AVDM_BlendFrames : public  ADM_coreVideoFilter
 {
 protected:
                 blend         param;
-                uint32_t     ***buffer;
+                uint32_t     **buffer;
                 //void         AccumulateFrame(ADMImage *buffer,ADMImage *frame);
                 //void         WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N);
 public:
@@ -121,11 +121,13 @@ bool AVDM_BlendFrames::getCoupledConf(CONFcouple **couples)
  */
 AVDM_BlendFrames::~AVDM_BlendFrames(void)
 {
-    if(buffer)      
-    {
-      delete buffer;//Q How do I delete this monster?
-      buffer=NULL;
-    }
+	if(buffer)      
+	{
+    	for(int i=0;i<1;i++)
+    		delete [] buffer[i];
+		delete [] buffer;
+		buffer=NULL;
+	}
 }
 /**
  * 
@@ -238,18 +240,17 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 	
 	if(buffer==NULL){
 		//Create new 32 bit accumulation buffer
-		buffer = new uint32_t**[3];
+		buffer = new uint32_t*[3];
 		for(int i=0;i<3;i++)
 		{
 			int w=(int)image->GetWidth((ADM_PLANE)i);
 			int h=(int)image->GetHeight((ADM_PLANE)i);
-			buffer[i] = new uint32_t*[h];
+			buffer[i] = new uint32_t[w*h];
 			for(int y=0;y<h;y++)
 			{
-				buffer[i][y] = new uint32_t[w];
 				for(int x=0;x<w;x++)
 				{
-					buffer[i][y][x]=0;
+					buffer[i][y*w+x]=0;
 				}
 			}
 		}
@@ -269,7 +270,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 		{
 			for(int x=0;x<w;x++)
 			{
-				buffer[i][y][x]+=(uint32_t)f[x];
+				buffer[i][y*w+x]+=(uint32_t)f[x];
 			}
 			f+=fpitches[i];
 		}        
@@ -296,7 +297,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 				for(int x=0;x<w;x++)
 				{
 					ip[x]=(uint8_t)buffer[i][y][x]/param.N;//Not sure if this will round weirdly
-					buffer[i][y][x]=0;//Reset buffer to 0
+					buffer[i][y*w+x]=0;//Reset buffer to 0
 				}
 				ip+=fpitches[i];
 			}        
