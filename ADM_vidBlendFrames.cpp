@@ -25,7 +25,8 @@ class AVDM_BlendFrames : public  ADM_coreVideoFilterCached
 protected:
                 blend         param;
                 ADMImage     *buffer;
-                bool         process(ADMImage *buffer,ADMImage *frame);
+                void         AccumulateFrame(ADMImage *buffer,ADMImage *frame);
+                void         WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N);
 public:
                              AVDM_BlendFrames(ADM_coreVideoFilter *previous,CONFcouple *conf);
                              ~AVDM_BlendFrames();
@@ -134,7 +135,7 @@ AVDM_BlendFrames::~AVDM_BlendFrames(void)
  * @param offset
  * @return 
  */
-bool AVDM_BlendFrames::AccumulateFrame(ADMImage *buffer,ADMImage *frame)
+void AVDM_BlendFrames::AccumulateFrame(ADMImage *buffer,ADMImage *frame)
 {
   
     uint8_t *bplanes[3]*;//Q uint32_t type image for accumulation?
@@ -162,7 +163,6 @@ bool AVDM_BlendFrames::AccumulateFrame(ADMImage *buffer,ADMImage *frame)
             f+=fpitches[i];
         }        
     }
-    return true;
 }
 
 bool AVDM_BlendFrames::WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N)
