@@ -217,6 +217,9 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
     //Divide buffer by N and write to 'image'
     //Reset buffer to 0
     WriteFrameAndClearBuffer(buffer,frame,param.N);
+    if(image->Pts==ADM_NO_PTS)
+        return true;
+    frame->Pts/=param.N;//Looking at changeFps filter, seems like there is no need to specify an invariant point
     return true;
   }
   return false;
