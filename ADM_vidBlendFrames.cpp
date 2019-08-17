@@ -209,7 +209,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
   //Create new buffer
   if(buffer==NULL)
     buffer=new ADMImageDefault(frame->GetWidth(PLANAR_Y),frame->GetHeight(PLANAR_Y));
-  accumulateframe(buffer,frame);
+  AccumulateFrame(buffer,frame);
   accumulated++;
   if(accumulated==param.N){
     accumulated=0;
