@@ -25,7 +25,7 @@ class AVDM_BlendFrames : public  ADM_coreVideoFilter
 protected:
                 blend          param;
                 uint32_t       **buffer;
-                unint32_t      accumulated;
+                uint32_t      accumulated;
                 //void         AccumulateFrame(ADMImage *buffer,ADMImage *frame);
                 //void         WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N);
 public:
@@ -59,7 +59,7 @@ DECLARE_VIDEO_FILTER(AVDM_BlendFrames,
 bool AVDM_BlendFrames::configure()
 {
   diaElemUInteger N(&(param.N),QT_TRANSLATE_NOOP("blend","Frames"));
-  diaElem *elems[1]={&N}
+  diaElem *elems[1]={&N};
   if(diaFactoryRun(QT_TRANSLATE_NOOP("blend","Blend"),1,elems)){
     if(param.N<1)
       param.N=1;
