@@ -23,8 +23,9 @@
 class AVDM_BlendFrames : public  ADM_coreVideoFilter
 {
 protected:
-                blend         param;
-                uint32_t     **buffer;
+                blend          param;
+                uint32_t       **buffer;
+                unint32_t      accumulated;
                 //void         AccumulateFrame(ADMImage *buffer,ADMImage *frame);
                 //void         WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N);
 public:
@@ -57,9 +58,6 @@ DECLARE_VIDEO_FILTER(AVDM_BlendFrames,
  */
 bool AVDM_BlendFrames::configure()
 {
-    
-  uint32_t N;
-
   diaElemUInteger N(&(param.N),QT_TRANSLATE_NOOP("blend","Frames"));
   diaElem *elems[1]={&N}
   if(diaFactoryRun(QT_TRANSLATE_NOOP("blend","Blend"),1,elems)){
@@ -85,7 +83,7 @@ const char *AVDM_BlendFrames::getConfiguration(void)
  * @param in
  * @param couples
  */
-AVDM_BlendFrames::AVDM_BlendFrames(ADM_coreVideoFilter *in,CONFcouple *setup) : ADM_coreVideoFilter(previous,setup)
+AVDM_BlendFrames::AVDM_BlendFrames(ADM_coreVideoFilter *in,CONFcouple *setup) : ADM_coreVideoFilter(in,setup)
 {
     if(!setup || !ADM_paramLoad(setup,blend_param,&param))
     {
@@ -141,8 +139,8 @@ AVDM_BlendFrames::~AVDM_BlendFrames(void)
 /*
 void AVDM_BlendFrames::AccumulateFrame(ADMImage *buffer,ADMImage *frame)
 {
-    uint8_t *bplanes[3]*;//Q uint32_t type image for accumulation?
-    uint8_t *fplanes[3]*;
+    uint8_t *bplanes[3];//Q uint32_t type image for accumulation?
+    uint8_t *fplanes[3];
     int      bpitches[3],fpitches[3];
 
     buffer->GetWritePlanes(bplanes);
@@ -171,7 +169,7 @@ void AVDM_BlendFrames::AccumulateFrame(ADMImage *buffer,ADMImage *frame)
 void AVDM_BlendFrames::WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N)
 {
   
-    uint8_t *brplanes[3]*,*bwplanes[3]*;//Q uint32_t type image for accumulation?
+    uint8_t *brplanes[3],*bwplanes[3];//Q uint32_t type image for accumulation?
     uint8_t *fplanes[3]*;
     int      bpitches[3],fpitches[3];
 
@@ -257,7 +255,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 		}
 
 		//Accumulate frame into buffer
-		uint8_t *fplanes[3]*;
+		uint8_t *fplanes[3];
 		int fpitches[3];
 		image->GetReadPlanes(fplanes);
 		image->GetPitches(fpitches);
@@ -285,7 +283,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 			//image->copyInfo(frame);//Who knows what crazy info the frame has
 			if(image->Pts!=ADM_NO_PTS)
 				image->Pts=image->Pts/param.N;
-			uint8_t *iplanes[3]*;
+			uint8_t *iplanes[3];
 			image->GetWritePlanes(iplanes);
 			for(int i=0;i<3;i++)
 			{
