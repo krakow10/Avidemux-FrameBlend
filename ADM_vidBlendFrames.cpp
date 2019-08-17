@@ -41,7 +41,6 @@ public:
 };
 
 // Add the hook to make it valid plugin
-
 DECLARE_VIDEO_FILTER(AVDM_BlendFrames,
 	1,0,0,              // Version
 	ADM_UI_ALL,         // UI
@@ -233,76 +232,78 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
  */
 bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 {
-	//I have a feeling that this is not the usual way to grab the input frame
-	//ADMImage *frame=vidCache->getImage(fn);
-	if(previousFilter->getNextFrame(fn,image)==false)
-		return false;
-	
-	if(buffer==NULL){
-		//Create new 32 bit accumulation buffer
-		buffer = new uint32_t*[3];
-		for(int i=0;i<3;i++)
-		{
-			int w=(int)image->GetWidth((ADM_PLANE)i);
-			int h=(int)image->GetHeight((ADM_PLANE)i);
-			buffer[i] = new uint32_t[w*h];
-			for(int y=0;y<h;y++)
+	while(true){
+		//I have a feeling that this is not the usual way to grab the input frame
+		//ADMImage *frame=vidCache->getImage(fn);
+		if(previousFilter->getNextFrame(fn,image)==false)
+			return false;
+		
+		if(buffer==NULL){
+			//Create new 32 bit accumulation buffer
+			buffer = new uint32_t*[3];
+			for(int i=0;i<3;i++)
 			{
-				for(int x=0;x<w;x++)
+				int w=(int)image->GetWidth((ADM_PLANE)i);
+				int h=(int)image->GetHeight((ADM_PLANE)i);
+				buffer[i] = new uint32_t[w*h];
+				for(int y=0;y<h;y++)
 				{
-					buffer[i][y*w+x]=0;
+					for(int x=0;x<w;x++)
+					{
+						buffer[i][y*w+x]=0;
+					}
 				}
 			}
 		}
-	}
 
-	//Accumulate frame into buffer
-	uint8_t *fplanes[3]*;
-	int fpitches[3];
-	image->GetReadPlanes(fplanes);
-	image->GetPitches(fpitches);
-	for(int i=0;i<3;i++)
-	{
-		int w=(int)image->GetWidth((ADM_PLANE)i);
-		int h=(int)image->GetHeight((ADM_PLANE)i);
-		uint8_t *f=fplanes[i];
-		for(int y=0;y<h;y++)
-		{
-			for(int x=0;x<w;x++)
-			{
-				buffer[i][y*w+x]+=(uint32_t)f[x];
-			}
-			f+=fpitches[i];
-		}        
-	}
-	accumulated++;
-
-	//Output a frame when N frames have been accumulated
-	if(accumulated==param.N){
-		accumulated=0;
-		//Divide buffer by N and write to 'image'
-		//image=new ADMImageDefault(frame->GetWidth(PLANAR_Y),frame->GetHeight(PLANAR_Y));
-		//image->copyInfo(frame);//Who knows what crazy info the frame has
-		if(image->Pts!=ADM_NO_PTS)
-			image->Pts=image->Pts/param.N;
-		uint8_t *iplanes[3]*;
-		image->GetWritePlanes(iplanes);
+		//Accumulate frame into buffer
+		uint8_t *fplanes[3]*;
+		int fpitches[3];
+		image->GetReadPlanes(fplanes);
+		image->GetPitches(fpitches);
 		for(int i=0;i<3;i++)
 		{
 			int w=(int)image->GetWidth((ADM_PLANE)i);
 			int h=(int)image->GetHeight((ADM_PLANE)i);
-			uint8_t *ip=iplanes[i];
+			uint8_t *f=fplanes[i];
 			for(int y=0;y<h;y++)
 			{
 				for(int x=0;x<w;x++)
 				{
-					ip[x]=(uint8_t)buffer[i][y][x]/param.N;//Not sure if this will round weirdly
-					buffer[i][y*w+x]=0;//Reset buffer to 0
+					buffer[i][y*w+x]+=(uint32_t)f[x];
 				}
-				ip+=fpitches[i];
+				f+=fpitches[i];
 			}        
 		}
-		return true;
+		accumulated++;
+
+		//Output a frame when N frames have been accumulated
+		if(accumulated==param.N){
+			accumulated=0;
+			//Divide buffer by N and write to 'image'
+			//image=new ADMImageDefault(frame->GetWidth(PLANAR_Y),frame->GetHeight(PLANAR_Y));
+			//image->copyInfo(frame);//Who knows what crazy info the frame has
+			if(image->Pts!=ADM_NO_PTS)
+				image->Pts=image->Pts/param.N;
+			uint8_t *iplanes[3]*;
+			image->GetWritePlanes(iplanes);
+			for(int i=0;i<3;i++)
+			{
+				int w=(int)image->GetWidth((ADM_PLANE)i);
+				int h=(int)image->GetHeight((ADM_PLANE)i);
+				uint8_t *ip=iplanes[i];
+				for(int y=0;y<h;y++)
+				{
+					for(int x=0;x<w;x++)
+					{
+						ip[x]=(uint8_t)buffer[i][y*w+x]/param.N;//Not sure if this will round weirdly
+						buffer[i][y*w+x]=0;//Reset buffer to 0
+					}
+					ip+=fpitches[i];
+				}
+			}
+			return true;
+		}
 	}
 	return false;
 }
