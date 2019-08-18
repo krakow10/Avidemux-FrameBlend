@@ -47,7 +47,7 @@ DECLARE_VIDEO_FILTER(AVDM_BlendFrames,
 	ADM_UI_ALL,         // UI
 	VF_TRANSFORM,       // Category
 	"blend",            // internal name (must be uniq!)
-	QT_TRANSLATE_NOOP("blend","BlendFrames"),// Display name
+	QT_TRANSLATE_NOOP("blend","Blend Frames"),// Display name
 	QT_TRANSLATE_NOOP("blend","Blend groups of N frames into a single frame.  Useful for speeding up slow motion footage or creating timelapses.") // Description
 );   
 /**
@@ -62,8 +62,6 @@ bool AVDM_BlendFrames::configure()
   diaElemUInteger N(&(param.N),QT_TRANSLATE_NOOP("blend","Frames"),1,MAX_BLEND_FRAMES);
   diaElem *elems[1]={&N};
   if(diaFactoryRun(QT_TRANSLATE_NOOP("blend","Blend"),1,elems)){
-    if(param.N<1)
-      param.N=1;
     info.totalDuration=previousFilter->getInfo()->totalDuration/((uint64_t)param.N);//This bad boy reports the proper duration to the loading bar
     return 1;
   }else
@@ -75,8 +73,8 @@ bool AVDM_BlendFrames::configure()
  */
 const char *AVDM_BlendFrames::getConfiguration(void)
 {
-    static char conf[24];
-    snprintf(conf,24," BlendFrames:%d ",param.N);
+    static char conf[12];
+    snprintf(conf,12," N:%d ",param.N);
     return conf;
 }
 
