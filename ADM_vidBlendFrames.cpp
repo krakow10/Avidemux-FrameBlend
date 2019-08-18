@@ -269,7 +269,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 			{
 				for(int x=0;x<w;x++)
 				{
-					buffer[i][y*w+x]+=(uint32_t)f[x];
+					buffer[i][y*w+x]+=(uint32_t)f[x];//
 				}
 				f+=fpitches[i];
 			}        
@@ -295,7 +295,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 				{
 					for(int x=0;x<w;x++)
 					{
-						ip[x]=(uint8_t)buffer[i][y*w+x]/param.N;//Not sure if this will round weirdly
+						ip[x]=(uint8_t)(buffer[i][y*w+x]/((uint32_t)param.N));//Not sure if this will round weirdly
 						buffer[i][y*w+x]=0;//Reset buffer to 0
 					}
 					ip+=fpitches[i];
