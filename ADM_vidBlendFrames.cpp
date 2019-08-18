@@ -64,7 +64,7 @@ bool AVDM_BlendFrames::configure()
   if(diaFactoryRun(QT_TRANSLATE_NOOP("blend","Blend"),1,elems)){
     if(param.N<1)
       param.N=1;
-    info.totalDuration=previousFilter->getInfo()->totalDuration/(uint64_t)param.N;//This bad boy reports the proper duration to the loading bar
+    info.totalDuration=previousFilter->getInfo()->totalDuration/((uint64_t)param.N);//This bad boy reports the proper duration to the loading bar
     return 1;
   }else
     return 0;
@@ -94,6 +94,7 @@ AVDM_BlendFrames::AVDM_BlendFrames(ADM_coreVideoFilter *in,CONFcouple *setup) : 
     }
     accumulated=0;
     buffer=NULL;
+    info.totalDuration=previousFilter->getInfo()->totalDuration/((uint64_t)param.N);
 }
 /**
  * \fn setCoupledConf
@@ -209,7 +210,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 				{
 					for(int x=0;x<w;x++)
 					{
-						ip[x]=(uint8_t)buffer[i][y*w+x]/(uint32_t)param.N;//Not sure if this will round weirdly
+						ip[x]=(uint8_t)(buffer[i][y*w+x]/(uint32_t)param.N);//Not sure if this will round weirdly
 						buffer[i][y*w+x]=0;//Reset buffer to 0
 					}
 					ip+=fpitches[i];
