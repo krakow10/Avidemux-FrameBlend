@@ -58,7 +58,7 @@ DECLARE_VIDEO_FILTER(AVDM_BlendFrames,
  */
 bool AVDM_BlendFrames::configure()
 {
-#define MAX_BLEND_FRAMES 16777216//2^32/2^8 This is the in-all-cases limit, but on average it should be able to support probably 25% more
+#define MAX_BLEND_FRAMES 16777216//2^32/2^8 This is the in-all-cases limit, but on average it should be able to support probably 25% more.  However, no frames will be exported unless the number of frames in the video is equal or greater.
   diaElemUInteger N(&(param.N),QT_TRANSLATE_NOOP("blend","Frames"),1,MAX_BLEND_FRAMES);
   diaElem *elems[1]={&N};
   if(diaFactoryRun(QT_TRANSLATE_NOOP("blend","Blend"),1,elems)){
@@ -145,8 +145,6 @@ AVDM_BlendFrames::~AVDM_BlendFrames(void)
 bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 {
 	while(true){
-		//I have a feeling that this is not the usual way to grab the input frame
-		//ADMImage *frame=vidCache->getImage(fn);
 		if(previousFilter->getNextFrame(fn,image)==false)
 			return false;
 		
@@ -158,6 +156,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 				int w=(int)image->GetWidth((ADM_PLANE)i);
 				int h=(int)image->GetHeight((ADM_PLANE)i);
 				buffer[i] = new uint32_t[w*h];
+				//I know that there is some way to initialize this with zeroes more efficiently, but I don't know how to do it.
 				for(int y=0;y<h;y++)
 				{
 					for(int x=0;x<w;x++)
@@ -208,7 +207,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 				{
 					for(int x=0;x<w;x++)
 					{
-						ip[x]=(uint8_t)(buffer[i][y*w+x]/(uint32_t)param.N);//Not sure if this will round weirdly
+						ip[x]=(uint8_t)(buffer[i][y*w+x]/(uint32_t)param.N);//Not sure if this will cast weirdly//It casted weirdly and made everything green, fixed now
 						buffer[i][y*w+x]=0;//Reset buffer to 0
 					}
 					ip+=fpitches[i];
