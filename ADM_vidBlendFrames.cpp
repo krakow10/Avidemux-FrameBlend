@@ -64,6 +64,7 @@ bool AVDM_BlendFrames::configure()
   if(diaFactoryRun(QT_TRANSLATE_NOOP("blend","Blend"),1,elems)){
     if(param.N<1)
       param.N=1;
+    info.totalDuration=previousFilter->getInfo()->totalDuration/(uint64_t)param.N;//This bad boy reports the proper duration to the loading bar
     return 1;
   }else
     return 0;
@@ -135,93 +136,6 @@ AVDM_BlendFrames::~AVDM_BlendFrames(void)
  * @param offset
  * @return 
  */
-
-//Not gonna deal with passing triple pointers
-/*
-void AVDM_BlendFrames::AccumulateFrame(ADMImage *buffer,ADMImage *frame)
-{
-    uint8_t *bplanes[3];//Q uint32_t type image for accumulation?
-    uint8_t *fplanes[3];
-    int      bpitches[3],fpitches[3];
-
-    buffer->GetWritePlanes(bplanes);
-    buffer->GetPitches(bpitches);//Q Nice
-    frame->GetReadPlanes(fplanes);
-    frame->GetPitches(fpitches);
-
-    for(int i=0;i<3;i++)
-    {
-        int    w=(int)frame->GetWidth((ADM_PLANE)i);
-        int    h=(int)frame->GetHeight((ADM_PLANE)i);
-        uint8_t *f=fplanes[i];
-        uint8_t *b=bplanes[i];//Q uint32_t
-        for(int y=0;y<h;y++)
-        {
-            for(int x=0;x<w;x++)
-            {
-                b[x]+=f[x];
-            }
-            b+=bpitches[i];
-            f+=fpitches[i];
-        }        
-    }
-}
-
-void AVDM_BlendFrames::WriteFrameAndClearBuffer(ADMImage *buffer,ADMImage *frame,uint32_t N)
-{
-  
-    uint8_t *brplanes[3],*bwplanes[3];//Q uint32_t type image for accumulation?
-    uint8_t *fplanes[3]*;
-    int      bpitches[3],fpitches[3];
-
-    buffer->GetReadPlanes(brplanes);
-    buffer->GetWritePlanes(bwplanes);
-    buffer->GetPitches(bpitches);//Q Nice
-    frame->GetWritePlanes(fplanes);
-    frame->GetPitches(fpitches);
-
-    for(int i=0;i<3;i++)
-    {
-        int    w=(int)frame->GetWidth((ADM_PLANE)i);
-        int    h=(int)frame->GetHeight((ADM_PLANE)i);
-        uint8_t *f=fplanes[i];
-        uint8_t *br=brplanes[i];//Q uint32_t
-        uint8_t *bw=bwplanes[i];
-        for(int y=0;y<h;y++)
-        {
-            for(int x=0;x<w;x++)
-            {
-                f[x]=(uint8_t)br[x]/N;//The meat of the matter...
-                bw[x]=0;//Clear buffer here as well because why not
-            }
-            br+=brpitches[i];
-            bw+=bwpitches[i];
-            f+=fpitches[i];
-        }        
-    }
-}
-bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
-{
-  ADMImage *frame=vidCache->getImage(fn);
-  //Create new 32 bit accumulation buffer
-  if(buffer==NULL){
-    buffer=new ADMImageDefault(frame->GetWidth(PLANAR_Y),frame->GetHeight(PLANAR_Y));
-  }
-  AccumulateFrame(buffer,frame);
-  accumulated++;
-  if(accumulated==param.N){
-    accumulated=0;
-    //Divide buffer by N and write to 'image'
-    //Reset buffer to 0
-    WriteFrameAndClearBuffer(buffer,frame,param.N);
-    if(frame->Pts!=ADM_NO_PTS)
-        frame->Pts/=param.N;//Looking at changeFps filter, seems like there is no need to specify an invariant point
-    image->duplicate(frame);
-    return true;
-  }
-  return false;
-}
-*/
 
 /**
  * \fn getNextFrame
@@ -295,7 +209,7 @@ bool AVDM_BlendFrames::getNextFrame(uint32_t *fn,ADMImage *image)
 				{
 					for(int x=0;x<w;x++)
 					{
-						ip[x]=(uint8_t)(buffer[i][y*w+x]/((uint32_t)param.N));//Not sure if this will round weirdly
+						ip[x]=(uint8_t)buffer[i][y*w+x]/(uint32_t)param.N;//Not sure if this will round weirdly
 						buffer[i][y*w+x]=0;//Reset buffer to 0
 					}
 					ip+=fpitches[i];
